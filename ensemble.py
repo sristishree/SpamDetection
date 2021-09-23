@@ -102,3 +102,44 @@ predictions = classifier.predict(X_test)
 print(f'Classification Report: {classification_report(y_test, predictions)}')
 
 ##############################################################################################################################################################################
+
+############################################################### PART 4: Grid Search ########################################################################
+
+
+from sklearn.model_selection import GridSearchCV, cross_validate
+from numpy import linspace
+from sklearn.metrics import make_scorer, precision_score, recall_score
+
+model_output_path = 'model_params.joblib'
+
+classifier = ensemble.GradientBoostingClassifier()
+
+scoring = {'accuracy': make_scorer(accuracy_score),
+           'precision': make_scorer(precision_score),'recall':make_scorer(recall_score)}
+
+parameters = {
+        'loss': ['deviance', 'exponential'],
+        'learning_rate': [0.01, 0.05, 0.1, 0.2, 0.5],
+        'n_estimators': [10, 100, 200],
+        #'subsample': [0.5, 0.8, 1.0],
+        'criterion': ['friedman_mse', 'mse'],
+        'min_samples_split': linspace(0.1, 0.5, 4),
+        #'min_samples_leaf': linspace(0.1, 0.5, 4),
+        #'max_depth': [3, 5, 7, 9],
+        'random_state': [10, 42],
+        #'max_features': ['auto', 'sqrt', 'log2'],
+    }
+
+# Grid Search
+clf = GridSearchCV(classifier, parameters, cv = 4, n_jobs = 4, verbose = 3)
+
+# Train over Grid Search
+clf.fit(X_train, y_train)
+
+# Best parameters
+joblib.dump(clf.best_estimator_, model_output_path)
+print(f'Best parameters: {clf.best_params_}')
+
+# Prediction
+y_pred = clf.predict(X_test)
+print(f'Classification Report for Grid Search: {classification_report(y_test, predictions)}')
